@@ -3,7 +3,7 @@
 
 #include "decoder.h"
 
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 
 DECODER *
 b25_startup(decoder_options *opt)

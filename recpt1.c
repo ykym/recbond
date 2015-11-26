@@ -27,7 +27,7 @@
 #include <sys/uio.h>
 
 #include "config.h"
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 #include "decoder.h"
 #endif
 #include "../typedef.h"
@@ -280,7 +280,7 @@ reader_func(void *p)
 	QUEUE_T *p_queue = tdata->queue;
 	Splitter *splitter = tdata->splitter;
 	int wfd = tdata->wfd;
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 	DECODER *dec = tdata->decoder;
 	boolean use_b25 = dec ? TRUE : FALSE;
 #endif
@@ -323,7 +323,7 @@ reader_func(void *p)
 
 		buf = sbuf; /* default */
 
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 		if(use_b25) {
 			code = b25_decode(dec, &sbuf, &dbuf);
 			if(code < 0) {
@@ -438,7 +438,7 @@ reader_func(void *p)
 
 			buf = sbuf; /* default */
 
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 			if(use_b25) {
 				code = b25_finish(dec, &sbuf, &dbuf);
 				if(code < 0)
@@ -514,7 +514,7 @@ reader_func(void *p)
 void
 show_usage(char *cmd)
 {
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 //	fprintf(stderr, "Usage: \n%s [--b25 [--round N] [--strip] [--EMM]] [--udp [--addr hostname --port portnumber]] [--http portnumber] [--driver drivername] [--lnb voltage] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 	fprintf(stderr, "Usage: \n%s [--b25 [--round N] [--strip] [--EMM]] [--udp [--addr hostname --port portnumber]] [--http portnumber] [--driver drivername] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 #else
@@ -531,7 +531,7 @@ void
 show_options(void)
 {
 	fprintf(stderr, "Options:\n");
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 	fprintf(stderr, "--b25:               Decrypt using BCAS card\n");
 	fprintf(stderr, "  --round N:         Specify round number\n");
 	fprintf(stderr, "  --strip:           Strip null stream\n");
@@ -630,12 +630,12 @@ main(int argc, char **argv)
 	pthread_t ipc_thread;
 	QUEUE_T *p_queue = create_queue(MAX_QUEUE);
 	BUFSZ	*bufptr;
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 	DECODER *decoder = NULL;
 #endif
 	Splitter *splitter = NULL;
 	static thread_data tdata;
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 	decoder_options dopt = {
 		4,	/* round */
 		0,	/* strip */
@@ -651,7 +651,7 @@ main(int argc, char **argv)
 	int result;
 	int option_index;
 	struct option long_options[] = {
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 		{ "b25",	 0, NULL, 'b'},
 		{ "B25",	 0, NULL, 'b'},
 		{ "round",	 1, NULL, 'r'},
@@ -676,7 +676,7 @@ main(int argc, char **argv)
 		{0, 0, NULL, 0} /* terminate */
 	};
 
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 	boolean use_b25 = FALSE;
 #endif
 	boolean use_udp = FALSE;
@@ -701,7 +701,7 @@ main(int argc, char **argv)
 	while((result = getopt_long(argc, argv, "br:smua:H:p:S:d:hvli:",
 								long_options, &option_index)) != -1) {
 		switch(result) {
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 		case 'b':
 			use_b25 = TRUE;
 			fprintf(stderr, "using B25...\n");
@@ -888,7 +888,7 @@ main(int argc, char **argv)
 		time(&tdata.start_time);
 	}	// http-server add
 
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 	/* initialize decoder */
 	if(use_b25) {
 		decoder = b25_startup(&dopt);
@@ -1001,7 +1001,7 @@ main(int argc, char **argv)
 		}	// http-server add
 		/* prepare thread data */
 		tdata.queue = p_queue;
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 		tdata.decoder = decoder;
 #endif
 		tdata.splitter = splitter;
@@ -1143,7 +1143,7 @@ main(int argc, char **argv)
 				free(sockdata);
 			}
 
-#ifdef HAVE_LIBARIB25
+#ifdef HAVE_LIBARIBB25
 			/* release decoder */
 			if(!use_http && use_b25)
 				b25_shutdown(decoder);
