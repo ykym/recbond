@@ -9,6 +9,13 @@ BonDriverProxy_Linux(https://github.com/u-n-k-n-o-w-n/BonDriverProxy_Linux)の
 recbondのディレクトリ"./recbond"を残したまま展開してrecpt1と同じ手順でビルドしてください。
 
 
+[ビルド]
+autogen.sh
+configure [--prefix=/usr/local] [--enable-b25]
+make
+make install
+
+
 [オプション]
 recpt1のものをそのまま受け継いでいますが"--LNB"と"--device"を廃止、BonDriver指定
 "--driver"とスペース指定"--space"を追加しています。
@@ -66,6 +73,8 @@ BonDriver_Proxy(クライアント)を利用する場合は、短縮指定時に
 ・BonDriverProxy使用時にBonDriver指定を省略した場合は、指定チャンネル受信中チューナー
   を探査して無ければ空きチューナーを探してチューニングを行います。
 
+version 1.0.2 (2015/11/28)
+	・b25->putがエラーになった場合のwithdraw処理を追加
 
 version 1.0.1 (2015/04/04)
 	・BS難視聴対策チャンネルを整理
