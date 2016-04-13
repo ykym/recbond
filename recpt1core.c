@@ -412,7 +412,7 @@ tune(char *channel, thread_data *tdata, char *driver)
 OPEN_TUNER:;
 		if((code = open_tuner(tdata, driver))){
 			if(code == -4)
-				fprintf(stderr, "OpenTuner erro: %s\n", driver);
+				fprintf(stderr, "OpenTuner error: %s\n", driver);
 			free(table_tmp);
 			return 1;
 		}
