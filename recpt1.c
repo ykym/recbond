@@ -516,10 +516,10 @@ show_usage(char *cmd)
 {
 #ifdef HAVE_LIBARIBB25
 //	fprintf(stderr, "Usage: \n%s [--b25 [--round N] [--strip] [--EMM]] [--udp [--addr hostname --port portnumber]] [--http portnumber] [--driver drivername] [--lnb voltage] [--sid SID1,SID2] channel rectime destfile\n", cmd);
-	fprintf(stderr, "Usage: \n%s [--b25 [--round N] [--strip] [--EMM]] [--udp [--addr hostname --port portnumber]] [--http portnumber] [--driver drivername] [--sid SID1,SID2] channel rectime destfile\n", cmd);
+	fprintf(stderr, "Usage: \n%s [--b25 [--round N] [--strip] [--EMM]] [--udp [--addr hostname --port portnumber]] [--http portnumber] [--driver drivername] [--space spacenumber] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 #else
 //	fprintf(stderr, "Usage: \n%s [--udp [--addr hostname --port portnumber]] [--driver drivername] [--lnb voltage] [--sid SID1,SID2] channel rectime destfile\n", cmd);
-	fprintf(stderr, "Usage: \n%s [--udp [--addr hostname --port portnumber]] [--driver drivername] [--sid SID1,SID2] channel rectime destfile\n", cmd);
+	fprintf(stderr, "Usage: \n%s [--udp [--addr hostname --port portnumber]] [--driver drivername] [--space spacenumber] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 #endif
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Remarks:\n");
@@ -545,6 +545,7 @@ show_options(void)
 #if 0	// LNB
 	fprintf(stderr, "--lnb voltage:       Specify LNB voltage (0, 11, 15)\n");
 #endif
+	fprintf(stderr, "--space spacenumber: Specify space number\n");
 	fprintf(stderr, "--sid SID1,SID2,...: Specify SID number in CSV format (101,102,...)\n");
 	fprintf(stderr, "--help:              Show this help\n");
 	fprintf(stderr, "--version:           Show version\n");

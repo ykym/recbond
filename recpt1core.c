@@ -229,7 +229,7 @@ show_channels(void)
 
 	fprintf(stderr, "101ch: NHK BS1\n");
 	fprintf(stderr, "103ch: NHK BS Premium\n");
-	fprintf(stderr, "141ch: BS Nittele\n");
+	fprintf(stderr, "141ch: BS NTV\n");
 	fprintf(stderr, "151ch: BS Asahi\n");
 	fprintf(stderr, "161ch: BS-TBS\n");
 	fprintf(stderr, "171ch: BS Japan\n");
@@ -240,7 +240,7 @@ show_channels(void)
 	fprintf(stderr, "200ch: Star Channel1\n");
 	fprintf(stderr, "201ch: Star Channel2\n");
 	fprintf(stderr, "202ch: Star Channel3\n");
-	fprintf(stderr, "211ch: BS11 Digital\n");
+	fprintf(stderr, "211ch: BS11\n");
 	fprintf(stderr, "222ch: TwellV\n");
 	fprintf(stderr, "231ch: Housou Daigaku 1\n");
 	fprintf(stderr, "232ch: Housou Daigaku 2\n");
@@ -248,7 +248,7 @@ show_channels(void)
 	fprintf(stderr, "234ch: Green Channel\n");
 	fprintf(stderr, "236ch: BS Animax\n");
 	fprintf(stderr, "238ch: FOX bs238\n");
-	fprintf(stderr, "241ch: BS SkyPer!\n");
+	fprintf(stderr, "241ch: BS SPTV\n");
 	fprintf(stderr, "242ch: J SPORTS 1\n");
 	fprintf(stderr, "243ch: J SPORTS 2\n");
 	fprintf(stderr, "244ch: J SPORTS 3\n");
@@ -260,7 +260,7 @@ show_channels(void)
 	fprintf(stderr, "258ch: Dlife\n");
 	fprintf(stderr, "C13-C63: CATV Channels\n");
 	fprintf(stderr, "CS2-CS24: CS Channels\n");
-	fprintf(stderr, "B0-: BonDriver Channel\n");
+	fprintf(stderr, "B0-: BonDriver Channels\n");
 	fprintf(stderr, "BS1_0-BS25_1: BS Channels(Transport)\n");
 	fprintf(stderr, "0x4000-0x7FFF: BS/CS Channels(TSID)\n");
 }
