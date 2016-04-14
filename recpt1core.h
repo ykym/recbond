@@ -65,7 +65,6 @@ typedef struct _thread_data {
     int tfd;    /* tuner fd */ //xxx variable
 
     int wfd;    /* output file fd */ //invariable
-    int lnb;    /* LNB voltage */ //invariable
     int msqid; //invariable
     time_t start_time; //invariable
 
@@ -90,7 +89,7 @@ extern boolean f_exit;
 int tune(char *channel, thread_data *tdata, char *device);
 int close_tuner(thread_data *tdata);
 void show_channels(void);
-BON_CHANNEL_SET *searchrecoff(char *channel);
+BON_CHANNEL_SET *searchrecoff(DWORD dwSpace, char *channel);
 void calc_cn(thread_data *tdata, boolean use_bell);
 int parse_time(const char * rectimestr, int *recsec);
 void do_bell(int bell);

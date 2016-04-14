@@ -2,18 +2,22 @@
 #ifndef _RECPT1_H_
 #define _RECPT1_H_
 
+#include "../typedef.h"
+
+#define ARIB_CH_ERROR		0x7FFFFFFFU
 #define CHTYPE_SATELLITE    0        /* satellite digital */
 #define CHTYPE_GROUND       1        /* terrestrial digital */
 #define CHTYPE_BonNUMBER    2        // BonDriver number
+#define MAX_CH				256
 #define MAX_QUEUE           8192
-#define MAX_READ_SIZE       (188 * 256) // BonDriver_DVB.hのTS_BUFSIZEと同値
+#define MAX_READ_SIZE       (188 * 384) // BonDriver_DVB.hのTS_BUFSIZEの1.5倍
 #define WRITE_SIZE          (1024 * 1024 * 2)
 #define TRUE                1
 #define FALSE               0
 
 typedef struct _BUFSZ {
     int size;
-    u_char buffer[MAX_READ_SIZE];	// 凡ドラ側でB25デコード時はこのサイズより大きくなるので注意
+    u_char buffer[MAX_READ_SIZE];
 } BUFSZ;
 
 typedef struct _QUEUE_T {
@@ -28,18 +32,18 @@ typedef struct _QUEUE_T {
     BUFSZ *buffer[1];    // バッファポインタ
 } QUEUE_T;
 
-typedef struct _ISDB_T_FREQ_CONV_TABLE {
-    int set_freq;    // 実際にioctl()を行う値
-    int type;        // チャンネルタイプ
-    int add_freq;    // 追加する周波数(BS/CSの場合はスロット番号)
-    char *parm_freq;    // パラメータで受ける値
-} ISDB_T_FREQ_CONV_TABLE;
-
 typedef struct _BON_CHANNEL_SET {
-	int bon_num;     // BonDriver channel number
-    int set_freq;    // BonDriver channel number 仮値
+	DWORD bon_space;   // BonDriver space number
+	DWORD bon_num;     // BonDriver channel number
+    DWORD set_freq;    // BonDriver channel number 仮値
     int type;        // チャンネルタイプ
     char parm_freq[16];    // パラメータで受ける値
 } BON_CHANNEL_SET;
+
+typedef struct _stChannel {
+	char channel[16];
+	DWORD bon_space;
+	DWORD bon_num;
+} stChannel;
 
 #endif

@@ -93,7 +93,6 @@ init_signal_handlers(pthread_t *signal_thread, thread_data *tdata)
 void
 show_usage(char *cmd)
 {
-//	fprintf(stderr, "Usage: \n%s [--driver devicefile] [--lnb voltage] [--bell] channel\n", cmd);
 	fprintf(stderr, "Usage: \n%s [--driver devicefile] [--bell] channel\n", cmd);
 	fprintf(stderr, "\n");
 }
@@ -103,7 +102,6 @@ show_options(void)
 {
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "--driver devicefile: Specify devicefile to use\n");
-//	fprintf(stderr, "--lnb voltage:       Specify LNB voltage (0, 11, 15)\n");
 	fprintf(stderr, "--bell:              Notify signal quality by bell\n");
 	fprintf(stderr, "--help:              Show this help\n");
 	fprintf(stderr, "--version:           Show version\n");
@@ -122,8 +120,6 @@ main(int argc, char **argv)
 		{ "help",	   0, NULL, 'h'},
 		{ "version",   0, NULL, 'v'},
 		{ "list",	   0, NULL, 'l'},
-//		{ "LNB",       1, NULL, 'n'},
-		{ "lnb",	   1, NULL, 'n'},
 		{ "driver",    1, NULL, 'd'},
 		{0, 0, NULL, 0} /* terminate */
 	};
@@ -131,12 +127,7 @@ main(int argc, char **argv)
 	tdata.hModule = NULL;
 	tdata.dwSpace = 0;
 	tdata.table = NULL;
-	tdata.lnb = 0;
 	char *driver = NULL;
-#if 0
-	int val;
-	char *voltage[] = {"0V", "11V", "15V"};
-#endif
 	boolean use_bell = FALSE;
 
 	while((result = getopt_long(argc, argv, "bhvln:d:",
@@ -164,24 +155,6 @@ main(int argc, char **argv)
 			show_channels();
 			exit(0);
 			break;
-#if 0
-		/* following options require argument */
-		case 'n':
-			val = atoi(optarg);
-			switch(val) {
-			case 11:
-				tdata.lnb = 1;
-				break;
-			case 15:
-				tdata.lnb = 2;
-				break;
-			default:
-				tdata.lnb = 0;
-				break;
-			}
-			fprintf(stderr, "LNB = %s\n", voltage[tdata.lnb]);
-			break;
-#endif
 		case 'd':
 			driver = optarg;
 			break;

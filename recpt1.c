@@ -32,7 +32,6 @@
 #endif
 #include "../typedef.h"
 #include "../IBonDriver2.h"
-//#include "recpt1.h"
 #include "recpt1core.h"
 #include "mkpath.h"
 
@@ -45,8 +44,73 @@
 #define MSGSZ	255
 
 /* globals */
-extern BON_CHANNEL_SET *isdb_t_conv_set;
+extern stChannel g_stChannels[MAX_CH];
 
+// Init
+int init(void)
+{
+	FILE *fp;
+	char *p, buf[512];
+
+	ssize_t len;
+	if ((len = readlink("/proc/self/exe", buf, sizeof(buf) - 8)) == -1)
+		return -2;
+	buf[len] = '\0';
+	strcat(buf, ".conf");
+
+	fp = fopen(buf, "r");
+	if (fp == NULL)
+	{
+		fprintf(stderr, "Cannot open '%s'\n", buf);
+		return -1;
+	}
+
+	int i = 0;
+	while (fgets(buf, sizeof(buf), fp) && i < MAX_CH - 1)
+	{
+		if (buf[0] == ';')
+			continue;
+		p = buf + strlen(buf) - 1;
+		while ((p >= buf) && (*p == '\r' || *p == '\n'))
+			*p-- = '\0';
+		if (p < buf)
+			continue;
+
+		int n = 0;
+		char *cp[3];
+		BOOL bOk = FALSE;
+		p = cp[n++] = buf;
+		while (1)
+		{
+			p = strchr(p, '\t');
+			if (p)
+			{
+				*p++ = '\0';
+				cp[n++] = p;
+				if (n > 2)
+				{
+					bOk = TRUE;
+					break;
+				}
+			}
+			else
+				break;
+		}
+		if (bOk)
+		{
+			int len = sizeof(g_stChannels[i].channel) - 1;
+			strncpy(g_stChannels[i].channel, cp[0], len);
+			g_stChannels[i].channel[len] = '\0';
+			g_stChannels[i].bon_space = atoi(cp[1]);
+			g_stChannels[i].bon_num = atoi(cp[2]);
+			i++;
+		}
+	}
+	g_stChannels[i].channel[0] = '\0';
+
+	fclose(fp);
+	return 0;
+}
 
 //read 1st line from socket
 void read_line(int socket, char *p){
@@ -88,11 +152,11 @@ mq_recv(void *t)
 
 		sscanf(rbuf.mtext, "ch=%s t=%d e=%d sid=%s", channel, &recsec, &time_to_add, service_id);
 
-		if( (table = searchrecoff(channel)) != NULL )
+		if( (table = searchrecoff(tdata->dwSpace, channel)) != NULL )
 			strcpy(channel, table->parm_freq);
 		if(strcmp(channel, tdata->table->parm_freq)) {
 			if( table == NULL ){
-				table = searchrecoff(channel);
+				table = searchrecoff(tdata->dwSpace, channel);
 				if (table == NULL) {
 					fprintf(stderr, "Invalid Channel: %s\n", channel);
 					goto CHECK_TIME_TO_ADD;
@@ -289,7 +353,6 @@ reader_func(void *p)
 	boolean use_splitter = splitter ? TRUE : FALSE;
 	int sfd = -1;
 	pthread_t signal_thread = tdata->signal_thread;
-//	struct sockaddr_in *addr = NULL;
 	BUFSZ *qbuf;
 	static splitbuf_t splitbuf;
 	ARIB_STD_B25_BUFFER sbuf, dbuf, buf;
@@ -306,7 +369,6 @@ reader_func(void *p)
 
 	if(use_udp) {
 		sfd = tdata->sock_data->sfd;
-//		addr = &tdata->sock_data->addr;
 	}
 
 	while(1) {
@@ -515,10 +577,8 @@ void
 show_usage(char *cmd)
 {
 #ifdef HAVE_LIBARIBB25
-//	fprintf(stderr, "Usage: \n%s [--b25 [--round N] [--strip] [--EMM]] [--udp [--addr hostname --port portnumber]] [--http portnumber] [--driver drivername] [--lnb voltage] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 	fprintf(stderr, "Usage: \n%s [--b25 [--round N] [--strip] [--EMM]] [--udp [--addr hostname --port portnumber]] [--http portnumber] [--driver drivername] [--space spacenumber] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 #else
-//	fprintf(stderr, "Usage: \n%s [--udp [--addr hostname --port portnumber]] [--driver drivername] [--lnb voltage] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 	fprintf(stderr, "Usage: \n%s [--udp [--addr hostname --port portnumber]] [--driver drivername] [--space spacenumber] [--sid SID1,SID2] channel rectime destfile\n", cmd);
 #endif
 	fprintf(stderr, "\n");
@@ -542,9 +602,6 @@ show_options(void)
 	fprintf(stderr, "  --port portnumber: Port number to connect\n");
 	fprintf(stderr, "--http portnumber:   Turn on http broadcasting (run as a daemon)\n");
 	fprintf(stderr, "--driver drivername: Specify drivername to use\n");
-#if 0	// LNB
-	fprintf(stderr, "--lnb voltage:       Specify LNB voltage (0, 11, 15)\n");
-#endif
 	fprintf(stderr, "--space spacenumber: Specify space number\n");
 	fprintf(stderr, "--sid SID1,SID2,...: Specify SID number in CSV format (101,102,...)\n");
 	fprintf(stderr, "--help:              Show this help\n");
@@ -626,6 +683,9 @@ init_signal_handlers(pthread_t *signal_thread, thread_data *tdata)
 int
 main(int argc, char **argv)
 {
+	if (init() < 0)
+		return 1;
+
 	pthread_t signal_thread;
 	pthread_t reader_thread;
 	pthread_t ipc_thread;
@@ -647,7 +707,6 @@ main(int argc, char **argv)
 	tdata.hModule = NULL;
 	tdata.dwSpace = 0;
 	tdata.table = NULL;
-	tdata.lnb = -1;
 
 	int result;
 	int option_index;
@@ -659,10 +718,6 @@ main(int argc, char **argv)
 		{ "strip",	 0, NULL, 's'},
 		{ "emm",	 0, NULL, 'm'},
 		{ "EMM",	 0, NULL, 'm'},
-#endif
-#if 0	// LNB
-		{ "LNB",	 1, NULL, 'n'},
-		{ "lnb",	 1, NULL, 'n'},
 #endif
 		{ "udp",	 0, NULL, 'u'},
 		{ "addr",	 1, NULL, 'a'},
@@ -690,10 +745,6 @@ main(int argc, char **argv)
 	int port_http = 12345;
 	SOCK_data *sockdata = NULL;
 	char *driver = NULL;
-#if 0	// LNB
-	int val;
-	char *voltage[] = {"0V", "11V", "15V"};
-#endif
 	char *sid_list = NULL;
 	int connected_socket = 0, listening_socket = 0;
 	unsigned int len;
@@ -750,23 +801,6 @@ main(int argc, char **argv)
 			exit(0);
 			break;
 		/* following options require argument */
-#if 0
-		case 'n':
-			val = atoi(optarg);
-			switch(val) {
-			case 11:
-				tdata.lnb = 1;
-				break;
-			case 15:
-				tdata.lnb = 2;
-				break;
-			default:
-				tdata.lnb = 0;
-				break;
-			}
-			fprintf(stderr, "LNB = %s\n", voltage[tdata.lnb]);
-			break;
-#endif
 		case 'a':
 			use_udp = TRUE;
 			host_to = optarg;
@@ -1050,8 +1084,6 @@ main(int argc, char **argv)
 				/* stop recording */
 				if(!tdata.indefinite && time(NULL) - tdata.start_time >= tdata.recsec) {
 					/* read remaining data */
-#if 1
-//					DWORD cnt_remain = tdata.pIBon->GetReadyCount();
 					DWORD cnt_remain = 40;		// 1sec分
 					timespec ts;
 					ts.tv_sec = 0;
@@ -1075,24 +1107,6 @@ main(int argc, char **argv)
 						if (dwRemain == 0)
 							nanosleep(&ts, NULL);
 					}
-#else
-					// CloseTuner()した段階でGetTsStream()がFALSEを返すのでこれはダメ
-					tdata.pIBon->CloseTuner();
-					tdata.tfd = FALSE;
-					DWORD cnt_remain = 0;
-					do{
-						if (tdata.pIBon->GetTsStream((BYTE **)&getbuf, &getsize, &dwRemain) && getsize > 0){
-							bufptr = (BUFSZ *)malloc(getsize + sizeof(int));
-							if(!bufptr)
-								break;
-							memcpy(bufptr->buffer, getbuf, getsize);
-							bufptr->size = getsize;
-							enqueue(p_queue, bufptr);
-	fprintf(stderr, "getsize: %i(%i)\n", getsize, dwRemain);
-						}
-					}while(dwRemain && ++cnt_remain < 100);
-#endif
-//					f_exit = TRUE;
 					enqueue(p_queue, NULL);
 					break;
 				}
