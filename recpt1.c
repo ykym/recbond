@@ -20,9 +20,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#include <sys/ipc.h>
-#include <sys/msg.h>
-
 #include <sys/socket.h>
 #include <sys/uio.h>
 
@@ -39,9 +36,6 @@
 
 /* maximum write length at once */
 #define SIZE_CHANK 1316
-
-/* ipc message size */
-#define MSGSZ	255
 
 /* globals */
 extern stChannel g_stChannels[MAX_CH];
@@ -132,83 +126,6 @@ void read_line(int socket, char *p){
 	}
 	*p = '\0';
 }
-
-
-/* will be ipc message receive thread */
-void *
-mq_recv(void *t)
-{
-	BON_CHANNEL_SET *table = NULL;
-	thread_data *tdata = (thread_data *)t;
-	message_buf rbuf;
-	char channel[16];
-	char service_id[32] = {0};
-	int recsec = 0, time_to_add = 0;
-
-	while(1) {
-		if(msgrcv(tdata->msqid, &rbuf, MSGSZ, 1, 0) < 0) {
-			return NULL;
-		}
-
-		sscanf(rbuf.mtext, "ch=%s t=%d e=%d sid=%s", channel, &recsec, &time_to_add, service_id);
-
-		if( (table = searchrecoff(tdata->dwSpace, channel)) != NULL )
-			strcpy(channel, table->parm_freq);
-		if(strcmp(channel, tdata->table->parm_freq)) {
-			if( table == NULL ){
-				table = searchrecoff(tdata->dwSpace, channel);
-				if (table == NULL) {
-					fprintf(stderr, "Invalid Channel: %s\n", channel);
-					goto CHECK_TIME_TO_ADD;
-				}
-			}
-
-			/* wait for remainder */
-			while(tdata->queue->num_used > 0) {
-				usleep(10000);
-			}
-
-			if (tdata->table->type != table->type) {
-				/* re-open device */
-				if(close_tuner(tdata) != 0)
-					return NULL;
-
-				tdata->table = table;
-				tune(channel, tdata, NULL);
-			} else {
-				tdata->table = table;
-				/* SET_CHANNEL only */
-				if(tdata->pIBon2->SetChannel(tdata->dwSpace, tdata->table->set_freq) == FALSE) {
-					fprintf(stderr, "Cannot tune to the specified channel\n");
-					goto CHECK_TIME_TO_ADD;
-				}
-				calc_cn(tdata, FALSE);
-			}
-		}
-
-CHECK_TIME_TO_ADD:
-		if(time_to_add) {
-			tdata->recsec += time_to_add;
-			fprintf(stderr, "Extended %d sec\n", time_to_add);
-		}
-
-		if(recsec) {
-			time_t cur_time;
-			time(&cur_time);
-			if(cur_time - tdata->start_time > recsec) {
-				f_exit = TRUE;
-			}
-			else {
-				tdata->recsec = recsec;
-				fprintf(stderr, "Total recording time = %d sec\n", recsec);
-			}
-		}
-
-		if(f_exit)
-			return NULL;
-	}
-}
-
 
 QUEUE_T *
 create_queue(size_t size)
@@ -688,7 +605,6 @@ main(int argc, char **argv)
 
 	pthread_t signal_thread;
 	pthread_t reader_thread;
-	pthread_t ipc_thread;
 	QUEUE_T *p_queue = create_queue(MAX_QUEUE);
 	BUFSZ	*bufptr;
 #ifdef HAVE_LIBARIBB25
@@ -793,7 +709,7 @@ main(int argc, char **argv)
 			break;
 		case 'v':
 			fprintf(stderr, "%s %s\n", argv[0], version);
-			fprintf(stderr, "recorder command for PT1/2 digital tuner.\n");
+			fprintf(stderr, "recorder command for BonDriver based tuners.\n");
 			exit(0);
 			break;
 		case 'l':
@@ -1050,15 +966,6 @@ main(int argc, char **argv)
 		/* spawn reader thread */
 		pthread_create(&reader_thread, NULL, reader_func, &tdata);
 
-		/* spawn ipc thread */
-		key_t key;
-		key = (key_t)getpid();
-
-		if ((tdata.msqid = msgget(key, IPC_CREAT | 0666)) < 0) {
-			perror("msgget");
-		}
-		pthread_create(&ipc_thread, NULL, mq_recv, &tdata);
-
 		fprintf(stderr, "\nRecording...\n");
 
 		/* read from tuner */
@@ -1124,15 +1031,11 @@ main(int argc, char **argv)
 		if(close_tuner(&tdata) != 0)
 			return 1;
 
-		/* delete message queue*/
-		msgctl(tdata.msqid, IPC_RMID, NULL);
-
 		pthread_kill(signal_thread, SIGUSR1);
 
 		/* wait for threads */
 		pthread_join(reader_thread, NULL);
 		pthread_join(signal_thread, NULL);
-		pthread_join(ipc_thread, NULL);
 
 		/* release queue */
 		destroy_queue(p_queue);

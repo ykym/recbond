@@ -31,15 +31,11 @@
 
 #include "../typedef.h"
 #include "../IBonDriver2.h"
-//#include "pt1_ioctl.h"
 #include "config.h"
 #include "decoder.h"
 #include "recpt1.h"
 #include "mkpath.h"
 #include "tssplitter_lite.h"
-
-/* ipc message size */
-#define MSGSZ     255
 
 /* used in checksigna.c */
 #define MAX_RETRY (2)
@@ -52,11 +48,6 @@ typedef struct _sock_data {
     struct sockaddr_in addr;
 } SOCK_data;
 
-typedef struct _msgbuf {
-    long    mtype;
-    char    mtext[MSGSZ];
-} message_buf;
-
 typedef struct _thread_data {
     DWORD dwSpace;			// tuner スペース指定(デフォルトは0)
     void *hModule;			// tuner 動的ライブラリへの内部「ハンドル」
@@ -65,7 +56,6 @@ typedef struct _thread_data {
     int tfd;    /* tuner fd */ //xxx variable
 
     int wfd;    /* output file fd */ //invariable
-    int msqid; //invariable
     time_t start_time; //invariable
 
     int recsec; //xxx variable

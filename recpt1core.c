@@ -114,12 +114,10 @@ searchrecoff(DWORD dwSpace, char *channel)
 		}
 	}
 
-	memset(channel_set.parm_freq, 0, 16);
 	channel_set.bon_space = dwBonSpace;
 	channel_set.bon_num = dwBonChannel;
 	channel_set.set_freq = freq;
 	channel_set.type = type;
-	sprintf(channel_set.parm_freq, "B%d", dwBonChannel);
 
 	return &channel_set;
 }

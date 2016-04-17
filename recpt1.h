@@ -37,7 +37,6 @@ typedef struct _BON_CHANNEL_SET {
 	DWORD bon_num;     // BonDriver channel number
     DWORD set_freq;    // BonDriver channel number 仮値
     int type;        // チャンネルタイプ
-    char parm_freq[16];    // パラメータで受ける値
 } BON_CHANNEL_SET;
 
 typedef struct _stChannel {
