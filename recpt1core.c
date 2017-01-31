@@ -98,7 +98,7 @@ searchrecoff(DWORD dwSpace, char *channel)
 			if(freq >= 2456123)
 				return NULL;
 		}
-		if(freq < 60000)
+		if(freq < 60000)	// recbond.confのチャンネル定義と照合
 		{
 			int i = 0;
 			do {
