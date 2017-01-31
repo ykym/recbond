@@ -2,7 +2,7 @@
 #ifndef _RECPT1_H_
 #define _RECPT1_H_
 
-#include "../typedef.h"
+#include "typedef.h"
 
 #define ARIB_CH_ERROR		0x7FFFFFFFU
 #define CHTYPE_SATELLITE    0        /* satellite digital */

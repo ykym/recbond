@@ -4,10 +4,6 @@
 Linux用BonDriver録画コマンドです。
 今までのソフト資産を生かしつつLinuxだけで完結する環境下での運用を想定しています。
 
-BonDriverProxy_Linux(https://github.com/u-n-k-n-o-w-n/BonDriverProxy_Linux)の
-ヘッダーファイルをインクルードしていますのでBonDriverProxy_Linuxのソースディレクトリ上に
-recbondのディレクトリ"./recbond"を残したまま展開してrecpt1と同じ手順でビルドしてください。
-
 
 [ビルド]
 autogen.sh
@@ -31,9 +27,6 @@ BonDriverチャンネル指定に加えrecpt1で使われている従来のも�
 
 全てのチャンネル指定方法を有効にするにはBonDriverのチャンネル定義とrecbond.confを
 同期させる必要があります。
-
-LinuxのBonDriverの場合は、BonDriverに同梱のパッチ linux_ch.diffをあててconfファイル
-を差し替えることにより全てのチャンネル指定方法が利用可能です。
 
 WindowsのBonDriverをBonDriverProxy経由で使用する場合は、BonDriverのiniファイルの
 チャンネル定義をrecbond.confと同期させる必要があります。同梱のrecbond.confを参考にして
@@ -65,6 +58,9 @@ BonDriver_Proxy(クライアント)を利用する場合は、短縮指定時に
 ・BonDriverProxy使用時にBonDriver指定を省略した場合は、指定チャンネル受信中チューナー
   を探査して無ければ空きチューナーを探してチューニングを行います。
 
+
+[更新履歴]
+最新の履歴はGitHubを参照してください。
 version 1.1.0 (2016/04/14)
 	・チャンネル定義をrecbond.confから読み込むように変更
 

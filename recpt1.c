@@ -27,8 +27,8 @@
 #ifdef HAVE_LIBARIBB25
 #include "decoder.h"
 #endif
-#include "../typedef.h"
-#include "../IBonDriver2.h"
+#include "typedef.h"
+#include "IBonDriver2.h"
 #include "recpt1core.h"
 #include "mkpath.h"
 
@@ -272,7 +272,10 @@ reader_func(void *p)
 	pthread_t signal_thread = tdata->signal_thread;
 	BUFSZ *qbuf;
 	static splitbuf_t splitbuf;
-	ARIB_STD_B25_BUFFER sbuf, dbuf, buf;
+	ARIB_STD_B25_BUFFER sbuf, buf;
+#ifdef HAVE_LIBARIBB25
+	ARIB_STD_B25_BUFFER dbuf;
+#endif
 	int code;
 	int split_select_finish = TSS_ERROR;
 
