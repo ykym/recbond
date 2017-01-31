@@ -13,48 +13,13 @@
 boolean f_exit = FALSE;
 stChannel g_stChannels[MAX_CH];
 
-#define NUM_PRESET_CH 41
-struct _preset_ch {
-	DWORD lch;
-	DWORD tsid;
-} preset_ch[NUM_PRESET_CH] = {
-	{ 101, 0x40f1 }, { 103, 0x40f2 },
-	{ 141, 0x40d0 }, { 151, 0x4010 },
-	{ 161, 0x4011 }, { 171, 0x4031 },
-	{ 181, 0x40d1 }, { 191, 0x4030 },
-	{ 192, 0x4450 }, { 193, 0x4451 },
-	{ 200, 0x4091 }, { 201, 0x4470 },
-	{ 202, 0x4470 }, { 211, 0x4490 },
-	{ 222, 0x4092 }, { 231, 0x46b2 },
-	{ 232, 0x46b2 }, { 233, 0x46b2 },
-	{ 234, 0x4730 }, { 236, 0x4671 },
-	{ 238, 0x46b0 }, { 241, 0x46b1 },
-	{ 242, 0x4731 }, { 243, 0x4732 },
-	{ 244, 0x4751 }, { 245, 0x4752 },
-	{ 251, 0x4770 }, { 252, 0x4750 },
-	{ 255, 0x4771 }, { 256, 0x4672 },
-	{ 258, 0x4772 }, { 291, 0x4310 },
-	{ 292, 0x4310 }, { 294, 0x4311 },
-	{ 295, 0x4311 }, { 296, 0x4311 },
-	{ 297, 0x4311 }, { 298, 0x4310 },
-	{ 531, 0x46b2 }, { 910, 0x40f2 },
-	{ 929, 0x40f1 }
-};
-
 // linux環境下で標準的なチャンネル指定をSetChannel()に渡せる形に変換
-// "nn"		地デジ(n=1-63)
-// "Cnn"	CATV(n=13-63)
-// "nnn"	BSサービスID指定(n=101-999)
-// "CSnn"	CSトラポン指定(n=2-24)
-// "0xhhhh"	BS/CS TSID指定(h=0x4010-0x7fff)
-// "Bnn"	BonDriverチャンネル番号(n=0-)
 BON_CHANNEL_SET *
 searchrecoff(DWORD dwSpace, char *channel)
 {
 	static BON_CHANNEL_SET channel_set;
 	DWORD dwBonSpace = dwSpace;
 	DWORD dwBonChannel = ARIB_CH_ERROR;
-	DWORD tsid;
 	DWORD freq = 0;
 	int type = CHTYPE_BonNUMBER;
 
@@ -67,49 +32,33 @@ searchrecoff(DWORD dwSpace, char *channel)
 			dwBonChannel += *channel - '0';
 		}
 	}
-	else if (channel[0] == '0' && (channel[1] == 'X' || channel[1] == 'x'))
-	{
-		tsid = strtoul(channel, NULL, 16);
-		for (int i = 0; i < NUM_PRESET_CH; i++)
-		{
-			if (preset_ch[i].tsid == tsid)
-			{
-				char str[4];
-				snprintf(str, 4, "%d", preset_ch[i].lch);
-				int j = 0;
-				do {
-					if (!strcmp(str, g_stChannels[j].channel))
-					{
-						dwBonSpace = g_stChannels[j].bon_space;
-						dwBonChannel = g_stChannels[j].bon_num;
-						type = CHTYPE_SATELLITE;
-						break;
-					}
-				} while (g_stChannels[++j].channel[0] != '\0');
-				break;
-			}
-		}
-	}
 	else
 	{
-		if (isdigit(*channel))
+		// recbond.confのチャンネル定義と照合
+		int i = 0;
+		while (g_stChannels[i].channel[0] != '\0')
 		{
-			freq = atoi(channel);
-			if(freq >= 2456123)
-				return NULL;
+			if (!strcmp(channel, g_stChannels[i].channel))
+			{
+				dwBonSpace = g_stChannels[i].bon_space;
+				dwBonChannel = g_stChannels[i].bon_num;
+				break;
+			}
+			i++;
 		}
-		if(freq < 60000)	// recbond.confのチャンネル定義と照合
+		if (dwBonChannel == ARIB_CH_ERROR)
 		{
-			int i = 0;
-			do {
-				if (!strcmp(channel, g_stChannels[i].channel))
-				{
-					dwBonSpace = g_stChannels[i].bon_space;
-					dwBonChannel = g_stChannels[i].bon_num;
-					break;
-				}
-			} while (g_stChannels[++i].channel[0] != '\0');
-			if( dwBonChannel == ARIB_CH_ERROR )
+			if (isdigit(*channel))
+			{
+				freq = atoi(channel);
+				if (freq > 90000 && freq < 770000)
+					type = CHTYPE_GROUND;
+				else if (freq > 1032000 && freq < 2602000)
+					type = CHTYPE_SATELLITE;
+				else
+					return NULL;
+			}
+			else
 				return NULL;
 		}
 	}
@@ -215,59 +164,12 @@ calc_cn(thread_data *tdata, boolean use_bell)
 void
 show_channels(void)
 {
-	FILE *f;
-	char *home;
-	char buf[255], filename[255];
-
 	fprintf(stderr, "Available Channels:\n");
-
-	home = getenv("HOME");
-	sprintf(filename, "%s/.recpt1-channels", home);
-	f = fopen(filename, "r");
-	if(f) {
-		while(fgets(buf, 255, f))
-			fprintf(stderr, "%s", buf);
-		fclose(f);
-	}
-	else
-		fprintf(stderr, "13-62: Terrestrial Channels\n");
-
-	fprintf(stderr, "101ch: NHK BS1\n");
-	fprintf(stderr, "103ch: NHK BS Premium\n");
-	fprintf(stderr, "141ch: BS NTV\n");
-	fprintf(stderr, "151ch: BS Asahi\n");
-	fprintf(stderr, "161ch: BS-TBS\n");
-	fprintf(stderr, "171ch: BS Japan\n");
-	fprintf(stderr, "181ch: BS Fuji\n");
-	fprintf(stderr, "191ch: WOWOW Prime\n");
-	fprintf(stderr, "192ch: WOWOW Live\n");
-	fprintf(stderr, "193ch: WOWOW Cinema\n");
-	fprintf(stderr, "200ch: Star Channel1\n");
-	fprintf(stderr, "201ch: Star Channel2\n");
-	fprintf(stderr, "202ch: Star Channel3\n");
-	fprintf(stderr, "211ch: BS11\n");
-	fprintf(stderr, "222ch: TwellV\n");
-	fprintf(stderr, "231ch: Housou Daigaku 1\n");
-	fprintf(stderr, "232ch: Housou Daigaku 2\n");
-	fprintf(stderr, "233ch: Housou Daigaku 3\n");
-	fprintf(stderr, "234ch: Green Channel\n");
-	fprintf(stderr, "236ch: BS Animax\n");
-	fprintf(stderr, "238ch: FOX bs238\n");
-	fprintf(stderr, "241ch: BS SPTV\n");
-	fprintf(stderr, "242ch: J SPORTS 1\n");
-	fprintf(stderr, "243ch: J SPORTS 2\n");
-	fprintf(stderr, "244ch: J SPORTS 3\n");
-	fprintf(stderr, "245ch: J SPORTS 4\n");
-	fprintf(stderr, "251ch: BS Tsuri Vision\n");
-	fprintf(stderr, "252ch: IMAGICA BS\n");
-	fprintf(stderr, "255ch: Nihon Eiga Senmon Channel\n");
-	fprintf(stderr, "256ch: Disney Channel\n");
-	fprintf(stderr, "258ch: Dlife\n");
-	fprintf(stderr, "C13-C63: CATV Channels\n");
-	fprintf(stderr, "CS2-CS24: CS Channels\n");
-	fprintf(stderr, "B0-: BonDriver Channels\n");
-	fprintf(stderr, "BS1_0-BS25_1: BS Channels(Transport)\n");
-	fprintf(stderr, "0x4000-0x7FFF: BS/CS Channels(TSID)\n");
+	fprintf(stderr, "B0-:          BonDriver Channels\n");
+	fprintf(stderr, "1-62:         Terrestrial Channels\n");
+	fprintf(stderr, "C13-C63:      CATV Channels\n");
+	fprintf(stderr, "BS1_0-BS23_2: BS Channels\n");
+	fprintf(stderr, "CS2-CS24:     CS Channels\n");
 }
 
 int
