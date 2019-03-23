@@ -291,6 +291,7 @@ static int RescanPID(Splitter *splitter, unsigned char *buf)
 			    splitter->pids[i] -= 1;
 		    }
 		}
+		splitter->pids[0x14] = 1;
 		fprintf(stderr, "Rescan PID End\n");
 	}
 
@@ -540,6 +541,7 @@ static int AnalyzePat(Splitter *sp, unsigned char *buf)
 					sid_found    = TRUE;
 					*(pids+0x11) = 1;
 					*(pids+0x12) = 1;
+					*(pids+0x14) = 1;
 					*(pids+0x23) = 1;         // SDTT
 					*(pids+0x29) = 1;         // CDT
 				}
